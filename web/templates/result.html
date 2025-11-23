@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ссылка готова!</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>✅ Ссылка готова!</h1>
+            <p>Ваша короткая ссылка создана успешно</p>
+        </header>
+
+        <main class="main">
+            <div class="result success">
+                <div class="original-url">
+                    <strong>Исходная ссылка:</strong>
+                    <span class="url">{{.OriginalURL}}</span>
+                </div>
+                
+                <div class="shortened-url">
+                    <strong>Короткая ссылка:</strong>
+                    <div class="result-link">
+                        <input type="text" id="shortUrl" value="{{.ShortURL}}" readonly>
+                        <button id="copyBtn" class="copy-btn">
+                            <span class="copy-text">Копировать</span>
+                            <span class="copied-text" style="display: none;">Скопировано!</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="qr-code" id="qrCode">
+                    <!-- QR код будет генерироваться JavaScript -->
+                </div>
+
+                <div class="actions">
+                    <a href="{{.ShortURL}}" target="_blank" class="btn-test">Протестировать ссылку</a>
+                    <a href="/" class="btn-new">Создать новую ссылку</a>
+                </div>
+            </div>
+
+            <div class="stats">
+                <p>Эта ссылка будет работать всегда! 🎉</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode.js/0.1.0/qrcode.min.js"></script>
+    <script src="/static/js/result.js"></script>
+</body>
+</html>

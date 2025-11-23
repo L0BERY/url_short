@@ -1,11 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL Shortener</title>
+    <title>Сокращатель ссылок</title>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    
+    <div class="container">
+        <header class="header">
+            <h1>🔗 Сокращатель ссылок</h1>
+            <p>Превратите длинные ссылки в короткие и удобные</p>
+        </header>
+
+        <main class="main">
+            <form id="shortenForm" class="shorten-form">
+                <div class="input-group">
+                    <input 
+                        type="url" 
+                        id="originalUrl" 
+                        placeholder="Введите вашу длинную ссылку..." 
+                        required
+                    >
+                    <button type="submit" id="submitBtn">
+                        <span class="btn-text">Сократить</span>
+                        <span class="btn-loading" style="display: none;">
+                            <div class="spinner"></div>
+                        </span>
+                    </button>
+                </div>
+                <div id="error" class="error-message" style="display: none;"></div>
+            </form>
+
+            <div id="result" class="result" style="display: none;">
+                <h3>Ваша короткая ссылка:</h3>
+                <div class="result-link">
+                    <input type="text" id="shortUrl" readonly>
+                    <button id="copyBtn" class="copy-btn">
+                        <span class="copy-text">Копировать</span>
+                        <span class="copied-text" style="display: none;">Скопировано!</span>
+                    </button>
+                </div>
+                <a href="/" class="new-link">Создать новую ссылку</a>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Простой и удобный сервис для сокращения URL</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/script.js"></script>
 </body>
 </html>
