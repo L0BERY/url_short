@@ -12,14 +12,33 @@ type PostgresRepository struct {
 	db *sql.DB
 }
 
+type Repository interface {
+	SaveURL(originalURL, shortCode string) error
+	GetURL(shortCode string) (string, error)
+	Exists(shortCode string) bool
+	GetStats(shortCode string) (int, time.Time, error)
+	Close() error
+}
+
 func NewPostgresRepository(connectionString string) (*PostgresRepository, error) {
-	db, err := sql.Open("postgres", connectionString)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
+	db, err1 := sql.Open("postgres", connectionString)
+	if err1 != nil {
+		return nil, fmt.Errorf("failed to open database: %w", err1)
 	}
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
+
+	// sqlBytes, err2 := os.ReadFile()
+	// if err2 != nil {
+	// 	return nil, fmt.Errorf("failed to read file: %w", err2)
+	// }
+	// sqlQuery := string(sqlBytes)
+	// _, err := db.Exec(sqlQuery)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to create database: %w", err)
+	// }
+
 	return &PostgresRepository{db: db}, nil
 }
 
@@ -32,7 +51,7 @@ func (r *PostgresRepository) SaveURL(originalURL, shortCode string) error {
 	return nil
 }
 
-func (r *PostgresRepository) GetUrl(shortCode string) (string, error) {
+func (r *PostgresRepository) GetURL(shortCode string) (string, error) {
 	var originalURL string
 	query := `SELECT original_url FROM urls WHERE short_code = $1`
 
