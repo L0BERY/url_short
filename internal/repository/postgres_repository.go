@@ -77,7 +77,10 @@ func (r *PostgresRepository) GetURL(shortCode string) (string, error) {
 		return "", fmt.Errorf("database error: %s", err)
 	}
 
-	go r.incrementClickCount(shortCode)
+	err = r.incrementClickCount(shortCode)
+	if err != nil {
+		fmt.Printf("Failed increment click count: %v", err)
+	}
 
 	return originalURL, nil
 }
@@ -88,7 +91,7 @@ func (r *PostgresRepository) GetShortCode(originalURL string) (string, error) {
 
 	err := r.db.QueryRow(query, originalURL).Scan(&shortCode)
 	if err == sql.ErrNoRows {
-		return "", fmt.Errorf("URL not found for code: %s", shortCode)
+		return "", fmt.Errorf("URL not found: %s", originalURL)
 	}
 	if err != nil {
 		return "", fmt.Errorf("database error: %s", err)
@@ -111,9 +114,13 @@ func (r *PostgresRepository) ExistsOriginalURL(originalURL string) bool {
 	return err == nil && exists
 }
 
-func (r *PostgresRepository) incrementClickCount(shortCode string) {
+func (r *PostgresRepository) incrementClickCount(shortCode string) error {
 	query := `UPDATE urls SET click_count = click_count + 1 WHERE short_code = $1`
-	r.db.Exec(query, shortCode)
+	_, err := r.db.Exec(query, shortCode)
+	if err != nil {
+		return fmt.Errorf("failed increment click count: %w", err)
+	}
+	return nil
 }
 
 func (r *PostgresRepository) GetStats(shortCode string) (int, time.Time, error) {
