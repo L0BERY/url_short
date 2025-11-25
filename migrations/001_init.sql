@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS urls (
     click_count INTEGER DEFAULT 0
 );
 
-CREATE INDEX idx_short_code ON urls(short_code);
--- CREATE INDEX idx_created_at ON urls(created_at);
+CREATE INDEX IF NOT EXISTS idx_short_code ON urls(short_code);
+CREATE INDEX IF NOT EXISTS idx_created_at ON urls(created_at);

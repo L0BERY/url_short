@@ -49,6 +49,7 @@ func (h *Handler) redirect(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "404.html", gin.H{
 			"message": "URL not found",
 		})
+		return
 	}
 	c.Redirect(http.StatusMovedPermanently, originalURL)
 }

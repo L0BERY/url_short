@@ -17,6 +17,8 @@ type Repository interface {
 	GetURL(shortCode string) (string, error)
 	Exists(shortCode string) bool
 	GetStats(shortCode string) (int, time.Time, error)
+	ExistsOriginalURL(originalURL string) bool
+	GetShortCode(originalURL string) (string, error)
 	Close() error
 }
 
@@ -29,17 +31,29 @@ func NewPostgresRepository(connectionString string) (*PostgresRepository, error)
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	// sqlBytes, err2 := os.ReadFile()
-	// if err2 != nil {
-	// 	return nil, fmt.Errorf("failed to read file: %w", err2)
-	// }
-	// sqlQuery := string(sqlBytes)
-	// _, err := db.Exec(sqlQuery)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to create database: %w", err)
-	// }
+	if err := createTable(db); err != nil {
+		return nil, fmt.Errorf("failed to create database: %w", err)
+	}
 
 	return &PostgresRepository{db: db}, nil
+}
+
+func createTable(db *sql.DB) error {
+	query := `
+	CREATE TABLE IF NOT EXISTS urls (
+    	id SERIAL PRIMARY KEY,
+    	short_code VARCHAR(10) UNIQUE NOT NULL,
+    	original_url TEXT NOT NULL,
+    	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    	click_count INTEGER DEFAULT 0
+	);
+	
+	CREATE INDEX IF NOT EXISTS idx_short_code ON urls(short_code);
+	CREATE INDEX IF NOT EXISTS idx_created_at ON urls(created_at);
+	`
+
+	_, err := db.Exec(query)
+	return err
 }
 
 func (r *PostgresRepository) SaveURL(originalURL, shortCode string) error {
@@ -56,19 +70,44 @@ func (r *PostgresRepository) GetURL(shortCode string) (string, error) {
 	query := `SELECT original_url FROM urls WHERE short_code = $1`
 
 	err := r.db.QueryRow(query, shortCode).Scan(&originalURL)
+	if err == sql.ErrNoRows {
+		return "", fmt.Errorf("URL not found for code: %s", shortCode)
+	}
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("database error: %s", err)
 	}
 
 	go r.incrementClickCount(shortCode)
 
-	return originalURL, err
+	return originalURL, nil
+}
+
+func (r *PostgresRepository) GetShortCode(originalURL string) (string, error) {
+	var shortCode string
+	query := `SELECT short_code FROM urls WHERE original_url = $1`
+
+	err := r.db.QueryRow(query, originalURL).Scan(&shortCode)
+	if err == sql.ErrNoRows {
+		return "", fmt.Errorf("URL not found for code: %s", shortCode)
+	}
+	if err != nil {
+		return "", fmt.Errorf("database error: %s", err)
+	}
+
+	return shortCode, nil
 }
 
 func (r *PostgresRepository) Exists(shortCode string) bool {
 	query := `SELECT EXISTS(SELECT 1 FROM urls WHERE short_code = $1)`
 	var exists bool
 	err := r.db.QueryRow(query, shortCode).Scan(&exists)
+	return err == nil && exists
+}
+
+func (r *PostgresRepository) ExistsOriginalURL(originalURL string) bool {
+	query := `SELECT EXISTS(SELECT 1 FROM urls WHERE original_url = $1)`
+	var exists bool
+	err := r.db.QueryRow(query, originalURL).Scan(&exists)
 	return err == nil && exists
 }
 

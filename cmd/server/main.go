@@ -16,6 +16,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %s", err)
 	}
+	defer repo.Close()
+
 	service := service.NewShortenerService(repo)
 	handler := handler.NewHandler(service, cfg)
 

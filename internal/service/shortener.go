@@ -28,21 +28,27 @@ func (s *ShortenerService) GenerateShortCode() string {
 }
 
 func (s *ShortenerService) SaveURL(originalURL string) (string, error) {
-	var shortCode string
+
+	exists := s.repo.ExistsOriginalURL(originalURL)
+	if exists {
+		shortCode, err := s.repo.GetShortCode(originalURL)
+		if err != nil {
+			return "", err
+		}
+		return shortCode, nil
+	}
+
 	for i := 0; i < 10; i++ {
-		shortCode = s.GenerateShortCode()
+		shortCode := s.GenerateShortCode()
 		if !s.repo.Exists(shortCode) {
-			break
-		}
-		if i == 9 {
-			return "", ErrTooManyAttempts
+			err := s.repo.SaveURL(originalURL, shortCode)
+			if err != nil {
+				return "", err
+			}
+			return shortCode, nil
 		}
 	}
-	err := s.repo.SaveURL(originalURL, shortCode)
-	if err != nil {
-		return "", err
-	}
-	return shortCode, nil
+	return "", ErrTooManyAttempts
 }
 
 func (s *ShortenerService) GetURL(shortCode string) (string, error) {
