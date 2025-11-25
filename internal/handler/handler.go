@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"shorturl.com/internal/service"
@@ -29,7 +28,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	router.GET("/", h.home)
 	router.GET("/:shortCode", h.redirect)
-	router.GET("/:shortCode/stats", h.stats)
+	// router.GET("/:shortCode/stats", h.stats)
 
 	router.POST("/shorten", h.shorten)
 
@@ -54,23 +53,23 @@ func (h *Handler) redirect(c *gin.Context) {
 	c.Redirect(http.StatusMovedPermanently, originalURL)
 }
 
-func (h *Handler) stats(c *gin.Context) {
-	shortCode := c.Param("shortCode")
+// func (h *Handler) stats(c *gin.Context) {
+// 	shortCode := c.Param("shortCode")
 
-	clickCount, createdAt, err := h.service.GetStats(shortCode)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "URL not found",
-		})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"short_code":       shortCode,
-		"click_count":      clickCount,
-		"created_at":       createdAt.Format(time.RFC3339),
-		"created_at_human": createdAt.Format("02.01.2006 15:04"),
-	})
-}
+// 	clickCount, createdAt, err := h.service.GetStats(shortCode)
+// 	if err != nil {
+// 		c.JSON(http.StatusNotFound, gin.H{
+// 			"error": "URL not found",
+// 		})
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, gin.H{
+// 		"short_code":       shortCode,
+// 		"click_count":      clickCount,
+// 		"created_at":       createdAt.Format(time.RFC3339),
+// 		"created_at_human": createdAt.Format("02.01.2006 15:04"),
+// 	})
+// }
 
 func (h *Handler) shorten(c *gin.Context) {
 	var request struct {
