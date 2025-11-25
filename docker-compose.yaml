@@ -6,23 +6,31 @@ services:
       - "8080:8080"
     environment:
       - SERVER_ADDRESS=:8080
-      - BASE_URL=https://short.new-sneacker.store
+      - BASE_URL=http://localhost:8080
       - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@db:5432/url_shortener?sslmode=disable
     depends_on:
       - db
+    networks:
+      - app-network
 
   db:
-    image: postgres:18
+    image: postgres:15
     environment:
       - POSTGRES_DB=url_shortener
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
     restart: unless-stopped
+    networks:
+      - app-network
 
 volumes:
   postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
