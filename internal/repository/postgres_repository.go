@@ -6,10 +6,12 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"shorturl.com/pkg/logger"
 )
 
 type PostgresRepository struct {
-	db *sql.DB
+	db     *sql.DB
+	logger logger.Logger
 }
 
 type Repository interface {
@@ -22,20 +24,24 @@ type Repository interface {
 	Close() error
 }
 
-func NewPostgresRepository(connectionString string) (*PostgresRepository, error) {
-	db, err1 := sql.Open("postgres", connectionString)
-	if err1 != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err1)
+func NewPostgresRepository(connectionString string, log logger.Logger) (*PostgresRepository, error) {
+	log.Info("connecting to database")
+	db, err := sql.Open("postgres", connectionString)
+	if err != nil {
+		log.Error("failed to open database", logger.Err(err))
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 	if err := db.Ping(); err != nil {
+		log.Error("failed to ping database", logger.Err(err))
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
 	if err := createTable(db); err != nil {
+		log.Error("failed to create table", logger.Err(err))
 		return nil, fmt.Errorf("failed to create database: %w", err)
 	}
-
-	return &PostgresRepository{db: db}, nil
+	log.Info("database connection established")
+	return &PostgresRepository{db: db, logger: log}, nil
 }
 
 func createTable(db *sql.DB) error {
@@ -57,11 +63,22 @@ func createTable(db *sql.DB) error {
 }
 
 func (r *PostgresRepository) SaveURL(originalURL, shortCode string) error {
+	r.logger.Debug("saving URL",
+		logger.String("short_code", shortCode),
+		logger.String("original_url", originalURL),
+	)
 	query := `INSERT INTO urls (short_code, original_url) VALUES ($1, $2)`
 	_, err := r.db.Exec(query, shortCode, originalURL)
 	if err != nil {
+		r.logger.Error("failed to save URL",
+			logger.String("short_code", shortCode),
+			logger.Err(err),
+		)
 		return fmt.Errorf("failed to save URL: %w", err)
 	}
+	r.logger.Info("URL saved successfully",
+		logger.String("short_code", shortCode),
+	)
 	return nil
 }
 
